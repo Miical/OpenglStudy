@@ -127,7 +127,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="myDraw.cpp" />
     <ClCompile Include="OpenglStudy.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="myDraw.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
