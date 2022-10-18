@@ -30,6 +30,10 @@ int cross(Vector a, Vector b) {
 int length(Vector a) {
 	return sqrt(dot(a, a));
 }
+Vector Rotate(Vector a, float rad) {
+	return Vector(a.x * cosf(rad) - a.y * sinf(rad), 
+		a.x * sinf(rad) + a.y * cosf(rad));
+}
 
 
 bool Line::operator==(const Line& line) const {
@@ -300,4 +304,34 @@ Line lineClipping(Line line, RectArea area) {
 			return Line(v.front(), v.back());
 		}
 	}
+}
+
+Ploy ployTranslation(Ploy ploy, Vector shift) {
+	for (auto& point : ploy)
+		point = point + shift;
+	return ploy;
+}
+
+Ploy ployRotate(Ploy ploy, Point rotation_point, float theta) {
+	for (auto& point : ploy)
+		point = rotation_point + Rotate(point - rotation_point, theta);
+	return ploy;
+}
+
+Ploy ployScaling(Ploy ploy, Point fixed_point, float sx, float sy) {
+	for (auto& point : ploy)
+		point = Point(point.x * sx + fixed_point.x * (1.0 - sx),
+			point.y * sy + fixed_point.y * (1.0 - sy));
+	return ploy;
+}
+
+Ploy ployShearX(Ploy ploy, float sh_x, float ref_y) {
+	for (auto& point : ploy)
+		point = Point(point.x + (point.y - ref_y) * sh_x, point.y);
+	return ploy;
+}
+Ploy ployShearY(Ploy ploy, float sh_y, float ref_x) {
+	for (auto& point : ploy)
+		point = Point(point.x, point.y + sh_y * (point.x - ref_x));
+	return ploy;
 }

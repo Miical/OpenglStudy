@@ -34,6 +34,7 @@ Vector operator/(const Vector& a, float p);
 int dot(Vector a, Vector b);
 int cross(Vector a, Vector b);
 int length(Vector a);
+Vector Rotate(Vector a, float rad);
 
 // 直线段
 struct Line {
@@ -85,5 +86,14 @@ void emptyPloy(Ploy ploy, float thickness);
 // 多边形切割
 Ploy ployClipping(Ploy area, Ploy ploy);
 
+/***** 二维几何变换 *****/
 
-
+// 多边形平移
+Ploy ployTranslation(Ploy ploy, Vector shift);
+// 多边形旋转
+Ploy ployRotate(Ploy ploy, Point rotation_point, float theta);
+// 多边形缩放 
+Ploy ployScaling(Ploy ploy, Point fixed_point, float sx, float sy);
+// 错切
+Ploy ployShearX(Ploy ploy, float sh_x, float ref_y);
+Ploy ployShearY(Ploy ploy, float sh_y, float ref_x);
