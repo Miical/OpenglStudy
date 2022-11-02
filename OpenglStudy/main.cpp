@@ -1,161 +1,94 @@
-﻿#include <gl/glut.h>
-#include <gl/GLU.h>
-#include <gl/GL.h>
-
+﻿#include <GL/GLUT.h>
 #include <math.h>
-void Cube() //正方体
-{
-	glBegin(GL_QUAD_STRIP);//填充凸多边形
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	glVertex3f(0.0f, 1.0f, 0.0f);
-	glVertex3f(1.0f, 0.0f, 0.0f);
-	glVertex3f(1.0f, 1.0f, 0.0f);
-	glVertex3f(1.0f, 0.0f, -1.0f);
-	glVertex3f(1.0f, 1.0f, -1.0f);
-	glVertex3f(0.0f, 0.0f, -1.0f);
-	glVertex3f(0.0f, 1.0f, -1.0f);
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	glVertex3f(0.0f, 1.0f, 0.0f);
-	glEnd();
-	glBegin(GL_QUAD_STRIP);
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	glVertex3f(1.0f, 0.0f, 0.0f);
-	glVertex3f(0.0f, 0.0f, -1.0f);
-	glVertex3f(1.0f, 0.0f, -1.0f);
-	glVertex3f(0.0f, 1.0f, 0.0f);
-	glVertex3f(1.0f, 1.0f, 0.0f);
-	glVertex3f(0.0f, 1.0f, -1.0f);
-	glVertex3f(1.0f, 1.0f, -1.0f);
-	glEnd();
-}
-void Circle() //圆面
-{
-	glBegin(GL_TRIANGLE_FAN);//扇形连续填充三角形串
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	int i = 0;
-	for (i = 0; i <= 375; i += 15)
-	{
-		float p = i * 3.14 / 180;
-		glVertex3f(sin(p), cos(p), 0.0f);
-	}
-	glEnd();
+
+GLint winWidth = 600, winHeight = 600;
+typedef GLint vertex3i[3];
+typedef GLfloat vertex3f[3];
+
+vertex3f p0 = { 200.0, 300.0, 200.0 }; // 观察参考系原点
+vertex3f p_ref = { 0.0, 0.0, 0.0 }; // 观察参考点
+GLfloat Vx = 0.0, Vy = 0.0, Vz = 1.0;
+
+GLfloat xwMin = -40.0, ywMin = -40.0, xwMax = 40.0, ywMax = 40.0;
+GLfloat dnear = 20.0, dfar = 1000.0;
+
+
+void coordinateSystem() {
+    glColor3f(0.4, 0.4, 0.4);
+    glLineWidth(3.0);
+    glBegin(GL_LINES);
+    glVertex3f(0.0, 0.0, 0.0);
+    glVertex3f(0.0, 0.0, 300.0);
+    glEnd();
+    glLineWidth(1.0);
+    glBegin(GL_LINES);
+    glVertex3f(0.0, 0.0, 0.0);
+    glVertex3f(0.0, 300.0, 0.0);
+    glEnd();
+    glLineWidth(2.0);
+    glBegin(GL_LINES);
+    glVertex3f(0.0, 0.0, 0.0);
+    glVertex3f(300.0, 0.0, 0.0);
+    glEnd();
 }
 
-void Cylinder() //圆柱
-{
-	glBegin(GL_QUAD_STRIP);//连续填充四边形串
-	int i = 0;
-	for (i = 0; i <= 375; i += 15)
-	{
-		float p = i * 3.14 / 180;
-		glVertex3f(sin(p), cos(p), 1.0f);
-		glVertex3f(sin(p), cos(p), 0.0f);
-	}
-	glEnd();
-	Circle();
-	glTranslatef(0, 0, 1);
-	Circle();
-}
-void Cone() //圆锥
-{
-	glBegin(GL_QUAD_STRIP);//连续填充四边形串
-	int i = 0;
-	for (i = 0; i <= 390; i += 15)
-	{
-		float p = i * 3.14 / 180;
-		glVertex3f(0, 0, 1.0f);
-		glVertex3f(sin(p), cos(p), 0.0f);
-	}
-	glEnd();
-	Circle();
+GLfloat ag;
+void displayFcn(void) {
+    glClear(GL_COLOR_BUFFER_BIT);
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+
+    coordinateSystem();
+
+    ag += 0.03;
+    glRotated(ag, 0.0, 0.0, 1.0);
+    glTranslatef(75, 75, 75);
+    glColor3f(0.0, 1.0, 0.0);
+    glutWireCube(150.0);
+
+    glPopMatrix();
+    glutSwapBuffers();
 }
 
-void AirPlane(float x, float y, float z)
-{
-	static float i = 0, f = 0;
-	i += 0.1;
-	f += 0.01;
-	if (i > 360)
-		i = 0;
-	if (f > 360)
-		f = 0;
-	glPushMatrix();
-	glTranslatef(x, y, z);
-	glRotatef(f, 1, 1, 1);
+void reshapeFcn(GLint newWidth, GLint newHeight) {
+    glViewport(0, 0, newWidth, newHeight);
 
-	glPushMatrix();
-	glColor3f(0.5, 1.5, 0.5);
-	glRotatef(i, 0, 1, 0);
-	glTranslatef(0, 0, 0.5);
-	glScalef(0.1, 0.05, 1);
-	Cube(); //螺旋桨
-	glPopMatrix();
-
-	glTranslatef(0, -0.1, 0);
-	glScalef(0.1, 0.1, 0.1);
-	Cube();
-	glScalef(10, 10, 10);
-
-	glColor3f(1, 0, 1);
-	glTranslatef(0.04, -0.05, -0.9);
-	glScalef(0.1, 0.1, 1.5);
-	Cylinder();
-	glColor3f(0, 1, 0);
-	glScalef(1, 1, 0.2);
-	Cone();
-	glColor3f(0, 1, 1);
-	glTranslatef(0, 0.7, -4.5);
-	glScalef(0.2, 2, 1);
-	Cube();
-
-	glTranslatef(-13, 0.3, 0);
-	glScalef(27, 0.1, 1);
-	Cube();
-
-	glPopMatrix();
+    winWidth = newWidth;
+    winHeight = newHeight;
 }
-void renderScene(void)
-{
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glLoadIdentity();
 
-	AirPlane(0, 0, -3);
+void idleFcn(void) {
+    // 视角在此处变换
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(p0[0], p0[1], p0[2], p_ref[0], p_ref[1], p_ref[2], Vx, Vy, Vz);
 
-	glutSwapBuffers();
+    glutPostRedisplay();
 }
-void changeSize(int w, int h) {
 
-	// 防止除数即高度为0
-	// (你可以设置窗口宽度为0).
-	if (h == 0)
-		h = 1;
-	float ratio = 1.0 * w / h;
+void init(void) {
+    glClearColor(1.0, 1.0, 1.0, 0.0);
 
-	// 单位化投影矩阵。
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    gluLookAt(p0[0], p0[1], p0[2], p_ref[0], p_ref[1], p_ref[2], Vx, Vy, Vz);
 
-	// 设置视口大小为整个窗口大小
-	glViewport(0, 0, w, h);
-
-	// 设置正确的投影矩阵
-	gluPerspective(45, ratio, 1, 1000);
-	//下面是设置模型视图矩阵
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	gluLookAt(0.0, 0.0, 5.0, 0.0, 0.0, -1.0, 0.0f, 1.0f, 0.0f);//设置观测点
+    glMatrixMode(GL_PROJECTION);
+    glFrustum(xwMin, xwMax, ywMin, ywMax, dnear, dfar);
 }
+
 int main(int argc, char* argv[])
 {
-	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
-	glutInitWindowPosition(100, 100);
-	glutInitWindowSize(320, 320);
-	glutCreateWindow("Hello OpenGL");
-	glutDisplayFunc(renderScene);
-	glutIdleFunc(renderScene); //指定程序空闲时调用函数
-	glutReshapeFunc(changeSize); //指定窗口形状变化时的回调函数
-	glEnable(GL_DEPTH_TEST);
-	glutMainLoop();
-	return 0;
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
+    glutInitWindowSize(winWidth, winHeight);
+    glutInitWindowPosition(800, 300);
+    glutCreateWindow("graphics");
+
+    init();
+    glutDisplayFunc(displayFcn);
+    glutReshapeFunc(reshapeFcn);
+    glutIdleFunc(idleFcn);
+    glutMainLoop();
+
+    return 0;
 }
