@@ -5,7 +5,7 @@ GLint winWidth = 600, winHeight = 600;
 typedef GLint vertex3i[3];
 typedef GLfloat vertex3f[3];
 
-vertex3f p0 = { 200.0, 300.0, 200.0 }; // 观察参考系原点
+vertex3f p0 = { 200.0, 50.0, -50.0 }; // 观察参考系原点
 vertex3f p_ref = { 0.0, 0.0, 0.0 }; // 观察参考点
 GLfloat Vx = 0.0, Vy = 0.0, Vz = 1.0;
 
@@ -34,19 +34,66 @@ void coordinateSystem() {
 
 GLfloat ag;
 void displayFcn(void) {
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
+
+    // coordinateSystem();
+
+    // 光源1
     glPushMatrix();
-
-    coordinateSystem();
-
-    ag += 0.03;
+    ag += 0.1;
     glRotated(ag, 0.0, 0.0, 1.0);
-    glTranslatef(75, 75, 75);
-    glColor3f(0.0, 1.0, 0.0);
-    glutWireCube(150.0);
+    glTranslatef(200, 120, 100);
+    GLfloat light0_position[] = { 0.0f, 0.0f, 0.0f, 1.0f }; //光源的位置在世界坐标系圆心，齐次坐标形式
+    GLfloat light0_ambient[] = { 0.0f, 0.0f, 0.0f, 1.0f }; //RGBA模式的环境光
+    GLfloat light0_diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f }; //RGBA模式的漫反射光
+    GLfloat light0_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f }; //RGBA模式下的镜面光
+    glLightfv(GL_LIGHT0, GL_POSITION, light0_position);
+    glLightfv(GL_LIGHT0, GL_AMBIENT, light0_ambient);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light0_diffuse);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light0_specular);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_DEPTH_TEST);
 
+    GLfloat mat0_ambient[] = { 0.0f, 0.0f, 0.0f, 1.0f }; //定义材质的环境光颜色
+    GLfloat mat0_diffuse[] = { 1.0f, 0.0f, 0.0f, 1.0f }; //定义材质的漫反射光颜色
+    GLfloat mat0_specular[] = { 1.0f, 0.0f, 0.0f, 1.0f }; //定义材质的镜面反射光颜色，为0
+    GLfloat mat0_emission[] = { 1.0f, 0.9f, 0.1f, 1.0f }; //定义材质的辐射光颜色，为白色
+    glMaterialfv(GL_FRONT, GL_AMBIENT, mat0_ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, mat0_diffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, mat0_specular);
+    glMaterialfv(GL_FRONT, GL_EMISSION, mat0_emission);
+    glutSolidSphere(20.0, 20, 20);
     glPopMatrix();
+
+
+    // 物体
+    GLfloat object_mat_ambient[] = { 0.5f, 0.5f, 0.5, 1.0f }; //定义材质的环境光颜色
+    GLfloat object_mat_diffuse[] = { 0.9f, 0.8f, 0.6f, 1.0f }; //定义材质的漫反射光颜色，红色
+    GLfloat object_mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f }; //定义材质的镜面反射光颜色，白色
+    GLfloat object_mat_emission[] = { 0.3f, 0.3f, 0.3f, 1.0f }; //定义材质的辐射光颜色，为0
+    GLfloat object_mat_shininess = 100.0f; //定义材质的光泽程度
+    glMaterialfv(GL_FRONT, GL_AMBIENT, object_mat_ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, object_mat_diffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, object_mat_specular);
+    glMaterialfv(GL_FRONT, GL_EMISSION, object_mat_emission);
+    glMaterialf(GL_FRONT, GL_SHININESS, object_mat_shininess);
+    glutSolidSphere(80, 80, 80);
+    glPushMatrix();
+	glTranslatef(0, 0, -150);
+    gluCylinder(gluNewQuadric(), 90.0, 70.0, 80.0, 80, 40);
+    glPopMatrix();
+    glPushMatrix();
+	glTranslatef(0, 0, -70);
+    gluDisk(gluNewQuadric(), 0.0, 70.0, 70.0, 70.0);
+    glPopMatrix();
+    glPushMatrix();
+	glTranslatef(0, 0, -150);
+    gluDisk(gluNewQuadric(), 0.0, 90.0, 90.0, 90.0);
+    glPopMatrix();
+
     glutSwapBuffers();
 }
 
@@ -57,8 +104,16 @@ void reshapeFcn(GLint newWidth, GLint newHeight) {
     winHeight = newHeight;
 }
 
+GLfloat delta_x = 0.03, delta_y = 0.03, delta_z = 0.03;
 void idleFcn(void) {
-    // 视角在此处变换
+    p0[0] += delta_x;
+    if (p0[0] <= 200 || 150 <= p0[0]) delta_x = -delta_x;
+    p0[1] += delta_y;
+    if (p0[1] <= 150 || 250 <= p0[1]) delta_y = -delta_y;
+    p0[2] += delta_z;
+    if (p0[2] <= -200 || 100 <= p0[2]) delta_z = -delta_z;
+    
+
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     gluLookAt(p0[0], p0[1], p0[2], p_ref[0], p_ref[1], p_ref[2], Vx, Vy, Vz);
@@ -79,9 +134,9 @@ void init(void) {
 int main(int argc, char* argv[])
 {
     glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
+    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
     glutInitWindowSize(winWidth, winHeight);
-    glutInitWindowPosition(800, 300);
+    glutInitWindowPosition(500, 100);
     glutCreateWindow("graphics");
 
     init();
