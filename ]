@@ -1,35 +1,17 @@
-﻿#include <GL/GLUT.h>
+#include <GL/GLUT.h>
 #include <math.h>
-#include "imageloader.h"
 
 GLint winWidth = 600, winHeight = 600;
 typedef GLint vertex3i[3];
 typedef GLfloat vertex3f[3];
 
-vertex3f p0 = { 20.0, 20.0, 20.0 }; // 观察参考系原点
+vertex3f p0 = { 200.0, 50.0, -50.0 }; // 观察参考系原点
 vertex3f p_ref = { 0.0, 0.0, 0.0 }; // 观察参考点
-GLfloat Vx = 0.0, Vy = 1.0, Vz = 0.0;
+GLfloat Vx = 0.0, Vy = 0.0, Vz = 1.0;
 
 GLfloat xwMin = -40.0, ywMin = -40.0, xwMax = 40.0, ywMax = 40.0;
 GLfloat dnear = 20.0, dfar = 1000.0;
 
-GLuint loadTexture(Image* image) {
-    GLuint textureId;
-    glGenTextures(1, &textureId); //Make room for our texture
-    glBindTexture(GL_TEXTURE_2D, textureId); //Tell OpenGL which texture to edit
-    //Map the image to the texture
-    glTexImage2D(GL_TEXTURE_2D,                //Always GL_TEXTURE_2D
-        0,                            //0 for now
-        GL_RGB,                       //Format OpenGL uses for image
-        image->width, image->height,  //Width and height
-        0,                            //The border of the image
-        GL_RGB, //GL_RGB, because pixels are stored in RGB format
-        GL_UNSIGNED_BYTE, //GL_UNSIGNED_BYTE, because pixels are stored
-        //as unsigned numbers
-        image->pixels);               //The actual pixel data
-    return textureId; //Returns the id of the texture
-}
-GLuint _textureId; //The id of the texture
 
 void coordinateSystem() {
     glColor3f(0.4, 0.4, 0.4);
@@ -85,12 +67,49 @@ void displayFcn(void) {
     glPopMatrix();
 
 
+    // 二维纹理
+    GLubyte texArray[32][32][4];
+    for (int i = 0; i < 32; i += 2) {
+        for (int j = 0; j < 32; j += 2) {
+            texArray[i][j][0] = 255;
+            texArray[i][j][1] = 255;
+            texArray[i][j][2] = 255;
+            texArray[i][j][3] = 255;
+            
+            texArray[i][j + 1][0] = 100;
+            texArray[i][j + 1][1] = 100;
+            texArray[i][j + 1][2] = 255;
+            texArray[i][j + 1][3] = 255;
+        }
+    }
+    for (int i = 1; i < 32; i += 2) {
+        for (int j = 0; j < 32; j += 2) {
+            texArray[i][j + 1][0] = 255;
+            texArray[i][j + 1][1] = 255;
+            texArray[i][j + 1][2] = 255;
+            texArray[i][j + 1][3] = 255;
+            
+            texArray[i][j][0] = 100;
+            texArray[i][j][1] = 100;
+            texArray[i][j][2] = 255;
+            texArray[i][j][3] = 255;
+        }
+    }
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, texArray);
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, _textureId);
+    glBegin(GL_QUADS);
+		glTexCoord2f(0.0, 0.0); glVertex3f(0.0, 0.0, 0.0);
+	 	glTexCoord2f(1.0, 0.0); glVertex3f(0.0, 200.0, 0.0);
+	 	glTexCoord2f(1.0, 1.0); glVertex3f(0.0, 200.0, 200.0);
+	 	glTexCoord2f(0.0, 1.0); glVertex3f(0.0, 0.0, 200.0);
+     glEnd();
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
 
 
     // 物体
-    /**/
     GLfloat object_mat_ambient[] = { 0.5f, 0.5f, 0.5, 1.0f }; //定义材质的环境光颜色
     GLfloat object_mat_diffuse[] = { 0.9f, 0.8f, 0.6f, 1.0f }; //定义材质的漫反射光颜色，红色
     GLfloat object_mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f }; //定义材质的镜面反射光颜色，白色
@@ -101,25 +120,20 @@ void displayFcn(void) {
     glMaterialfv(GL_FRONT, GL_SPECULAR, object_mat_specular);
     glMaterialfv(GL_FRONT, GL_EMISSION, object_mat_emission);
     glMaterialf(GL_FRONT, GL_SHININESS, object_mat_shininess);
-
-    //绘制底部矩形
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glColor3f(1.0f, 1.0f, 1.0f);
-    glBegin(GL_QUADS);
-
-    glNormal3f(0.0, 1.0f, 0.0f);
-    glTexCoord2f(0.0f, 0.0f);
-    glVertex3f(-8.0f, -8.0f, 8.0f);
-    glTexCoord2f(1.0f, 0.0f);
-    glVertex3f(8.0f, -8.0f, 8.0f);
-    glTexCoord2f(1.0f, 1.0f);
-    glVertex3f(8.0f, -8.0f, -8.0f);
-    glTexCoord2f(0.0f, 1.0f);
-    glVertex3f(-8.0f, -8.0f, -8.0f);
-
-    glEnd();
-
+    glutSolidSphere(80, 80, 80);
+    glPushMatrix();
+	glTranslatef(0, 0, -150);
+    gluCylinder(gluNewQuadric(), 90.0, 70.0, 80.0, 80, 40);
+    glPopMatrix();
+    glPushMatrix();
+	glTranslatef(0, 0, -70);
+    gluDisk(gluNewQuadric(), 0.0, 70.0, 70.0, 70.0);
+    glPopMatrix();
+    glPushMatrix();
+	glTranslatef(0, 0, -150);
+    gluDisk(gluNewQuadric(), 0.0, 90.0, 90.0, 90.0);
+    glPopMatrix();
+    glDisable(GL_TEXTURE_2D);
 
     // 一维纹理
     /*
@@ -155,106 +169,23 @@ void displayFcn(void) {
     glutSwapBuffers();
 }
 
-
-
-void initRendering() {
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
-    glEnable(GL_NORMALIZE);
-    glEnable(GL_COLOR_MATERIAL);
-
-    Image* image = loadBMP("./img/imag.bmp3");
-    _textureId = loadTexture(image);
-    delete image;
-}
-
-void drawScene() {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-    glTranslatef(0.0f, 1.0f, -6.0f);
-
-    //设置光照
-    GLfloat ambientLight[] = { 0.2f, 0.2f, 0.2f, 1.0f };
-    GLfloat directedLight[] = { 0.7f, 0.7f, 0.7f, 1.0f };
-    GLfloat directedLightPos[] = { -10.0f, 15.0f, 20.0f, 0.0f };
-    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambientLight);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, directedLight);
-    glLightfv(GL_LIGHT0, GL_POSITION, directedLightPos);
-
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, _textureId);
-
-    //绘制底部矩形
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glColor3f(1.0f, 1.0f, 1.0f);
-    glBegin(GL_QUADS);
-
-    glNormal3f(0.0, 1.0f, 0.0f);
-    glTexCoord2f(0.0f, 0.0f);
-    glVertex3f(-16.0f, -16.0f, 16.0f);
-    glTexCoord2f(1.0f, 0.0f);
-    glVertex3f(16.0f, -16.0f, 16.0f);
-    glTexCoord2f(1.0f, 1.0f);
-    glVertex3f(16.0f, -16.0f, -16.0f);
-    glTexCoord2f(0.0f, 1.0f);
-    glVertex3f(-16.0f, -16.0f, -16.0f);
-
-    glEnd();
-
-    /*
-    //绘制后部back三角形
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glColor3f(1.0f, 1.0f, 1.0f);
-    glBegin(GL_TRIANGLES);
-
-    //设定平面法向量指向位置
-    glNormal3f(0.0f, 0.0f, 1.0f);
-    glTexCoord2f(0.0f, 0.0f);
-    glVertex3f(-2.5f, -2.5f, -2.5f);
-    glTexCoord2f(0.5f, 1.0f);
-    glVertex3f(0.0f, 2.5f, -2.5f);
-    glTexCoord2f(1.0f, 0.0f);
-    glVertex3f(2.5f, -2.5f, -2.5f);
-
-    glEnd();
-
-    //绘制左侧矩形
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glColor3f(1.0f, 1.0f, 1.0f);
-    glBegin(GL_QUADS);
-
-    glNormal3f(1.0f, 0.0f, 0.0f);
-    glTexCoord2f(0.0f, 0.0f);
-    glVertex3f(-2.5f, -2.5f, 2.5f);
-    glTexCoord2f(1.0f, 0.0f);
-    glVertex3f(-2.5f, -2.5f, -2.5f);
-    glTexCoord2f(1.0f, 1.0f);
-    glVertex3f(-2.5f, 2.5f, -2.5f);
-    glTexCoord2f(0.0f, 1.0f);
-    glVertex3f(-2.5f, 2.5f, 2.5f);
-
-    glEnd();
-
-    */
-    glDisable(GL_TEXTURE_2D);
-    glutSwapBuffers();
-}
-
-
 void reshapeFcn(GLint newWidth, GLint newHeight) {
     glViewport(0, 0, newWidth, newHeight);
 
     winWidth = newWidth;
     winHeight = newHeight;
 }
+
+GLfloat delta_x = 0.03, delta_y = 0.03, delta_z = 0.03;
 void idleFcn(void) {
+    p0[0] += delta_x;
+    if (p0[0] <= 200 || 150 <= p0[0]) delta_x = -delta_x;
+    p0[1] += delta_y;
+    if (p0[1] <= 150 || 250 <= p0[1]) delta_y = -delta_y;
+    p0[2] += delta_z;
+    if (p0[2] <= -200 || 100 <= p0[2]) delta_z = -delta_z;
+    
+
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     gluLookAt(p0[0], p0[1], p0[2], p_ref[0], p_ref[1], p_ref[2], Vx, Vy, Vz);
@@ -281,7 +212,6 @@ int main(int argc, char* argv[])
     glutCreateWindow("graphics");
 
     init();
-    initRendering();
     glutDisplayFunc(displayFcn);
     glutReshapeFunc(reshapeFcn);
     glutIdleFunc(idleFcn);
